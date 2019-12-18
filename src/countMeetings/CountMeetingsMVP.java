@@ -1,6 +1,9 @@
 package countMeetings;
 
-import java.io.File;
+import java.util.List;
+
+import countMeetings.helpers.CSVReader;
+import countMeetings.helpers.MeetingInterval;
 
 /**
  * This is the Minimum Viable Product version of CountMeetings
@@ -14,13 +17,20 @@ import java.io.File;
  * @author Alex Lay
  */
 public class CountMeetingsMVP implements CountMeetings {
-	
+	/**
+	 * Counts the total number of meetings in the given csv meetings file
+	 * 
+	 * @param meetingsPath is the path to the csv meetings file
+	 * @return the total number of meetings
+	 */
 	public int countMeetings(String meetingsPath) {
-		
-		return 0;
-	}
-	
-	public static void main(String args[]) {
-		
+		CSVReader csvReader = new CSVReader();
+		List<MeetingInterval> meetings = csvReader.readMeetingsBasic(meetingsPath);
+		Integer total = 0;
+		for (MeetingInterval i : meetings) {
+			total += i.getMeetingCount();
+		}
+			
+		return total;
 	}
 }
