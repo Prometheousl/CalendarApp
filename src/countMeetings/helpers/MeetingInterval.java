@@ -18,6 +18,12 @@ public class MeetingInterval {
 	LocalDate endDate;
 	DayOfWeek dayOfTheWeek; // enum of the days of the week
 	
+	public MeetingInterval() {
+		beginDate = null;
+		endDate = null;
+		dayOfTheWeek = null;
+	}
+	
 	public MeetingInterval(String begin, String end, String day) {
 		beginDate = LocalDate.parse(begin);
 		endDate = LocalDate.parse(end);

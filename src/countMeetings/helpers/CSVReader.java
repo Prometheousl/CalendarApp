@@ -46,11 +46,11 @@ public class CSVReader {
 			csvReader.close();
 		}
 		catch(FileNotFoundException e) {
-			System.out.println("Couldn't find file.");
+			System.out.print("Couldn't find file.");
 			e.printStackTrace();
 		}
 		catch(IOException e) {
-			System.out.println("Problem reading from file.");
+			System.out.print("Problem reading from file.");
 			e.printStackTrace();
 		}
 		return meetings;
