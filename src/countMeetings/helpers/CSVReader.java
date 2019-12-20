@@ -21,7 +21,7 @@ import java.util.List;
 public class CSVReader {
 	/**
 	 * Stores the Date information contained in the given csv file
-	 *   in MeetinInterval objects. Input must be in the format
+	 *   in MeetingInterval objects. Input must be in the format
 	 *   beginDate, EndDate, DayOfWeek in the csv file.
 	 * 
 	 * @param csvPath is the path to a csv file
@@ -37,7 +37,6 @@ public class CSVReader {
 			String row;
 			while ((row = csvReader.readLine()) != null) {
 			    String[] data = row.split(",");
-			    // The basic reader accepts only input of format BeginDate, EndDate, Day
 			    if(data.length != 3) {
 			    	throw new IOException("Invalid input file format.");
 			    }
@@ -54,6 +53,55 @@ public class CSVReader {
 			e.printStackTrace();
 		}
 		return meetings;
+	}
+	
+	/**
+	 * Stores the Date information contained in the given csv file in MeetingInterval objects.
+	 * The full reader accepts input of format BeginDate, EndDate, Day
+	 *		    	                       and BeginDate, EndDate, { "Holiday" | "Vacation" }
+	 * 
+	 * Note: This duplicates code... I thought about adding a isFull boolean to the previous
+	 *     function but I decided to keep them separate for readability. I could be persuaded
+	 *     to combine them, though.
+	 * 
+	 * https://stackoverflow.com/questions/12947659/how-can-i-return-2-arraylist-from-same-method
+	 * 
+	 * @param csvPath is the path to a csv file containing meeting information
+	 * @return two arraylists, one with meetings and the other with vacations/holidays
+	 */
+	public List[] readMeetingsFull(String csvPath) {
+		List<MeetingInterval> meetings = new ArrayList<MeetingInterval>();
+		List<MeetingInterval> vacations = new ArrayList<MeetingInterval>();
+		
+		try {
+			File csvFile = new File(csvPath);
+			BufferedReader csvReader = new BufferedReader(new FileReader(csvFile));
+			String row;
+			while ((row = csvReader.readLine()) != null) {
+			    String[] data = row.split(",");
+			    if(data.length != 3) {
+			    	throw new IOException("Invalid input file format.");
+			    }
+			    if(data[2].toLowerCase() == "holiday" || data[2].toLowerCase() == "vacation") {
+			    	vacations.add(new MeetingInterval(sanitizeDate(data[0]), sanitizeDate(data[1])));
+			    }
+			    else {
+			    	meetings.add(new MeetingInterval(sanitizeDate(data[0]), sanitizeDate(data[1]), data[2]));
+			    }
+			}
+			csvReader.close();
+		}
+		catch(FileNotFoundException e) {
+			System.out.print("Couldn't find file.");
+			e.printStackTrace();
+		}
+		catch(IOException e) {
+			System.out.print("Problem reading from file.");
+			e.printStackTrace();
+		}
+		
+		// I wish Java could return two variables..
+		return new List[] { meetings, vacations };
 	}
 	
 	/**
