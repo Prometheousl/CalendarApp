@@ -1,13 +1,10 @@
 package countMeetings;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.TreeMap;
 
 import countMeetings.helpers.CSVReader;
 import countMeetings.helpers.MeetingInterval;
-import countMeetings.helpers.MeetingIntervalComparator;
 import countMeetings.helpers.MeetingIntervalTree;
 
 /**
@@ -17,8 +14,10 @@ import countMeetings.helpers.MeetingIntervalTree;
  *   (3) Singular Meetings
  *   (4) function for haveMeeting(Date) returns true if have a meeting on that day
  * 
- * This implementation should be used when...
- * 
+ * This implementation should be used when there will be vacations in the input or
+ *   if there will possibly be overlapping meetings.
+ *   
+ * Since it is based off of a Red-Black tree, search, insert, and delete are all O(logN).
  * 
  * @author Alex Lay
  */
@@ -35,39 +34,66 @@ public class CountMeetingsFull implements CountMeetings {
 		return countMeetingsInTree(intervalTree);
 	}
 	
+	/**
+	 * Counts all of the meetings in the tree
+	 * 
+	 * O(logN)
+	 * 
+	 * @param tree = the interval tree
+	 * @return the total number of meetings in the tree
+	 */
 	public Integer countMeetingsInTree(MeetingIntervalTree tree) {
-		Integer total = 0;
-		return tree.countMeetings(tree.getRoot(), total);
+		return tree.countMeetings(tree.getRoot());
 	}
 	
+	/**
+	 * Inserts all of the given meetings into the tree
+	 * 
+	 * O(logN)
+	 * 
+	 * @param tree = an interval tree
+	 * @param meetings = the meetings to insert
+	 */
 	public void insertMeetings(MeetingIntervalTree tree, List<MeetingInterval> meetings) {
 		tree.insertList(meetings);
 	}
 	
+	/**
+	 * Removes all of the given vacation intervals from the tree
+	 * 
+	 * For each vacation...
+	 * 		(1) Gets and removes all overlaps from the tree
+	 * 		(2) For each vacation...
+	 * 				(3) Splits overlap based on vacation
+	 * 				(4) Inserts split intervals back into the tree
+	 * 
+	 * O(logN)
+	 * 
+	 * @param tree
+	 * @param vacations
+	 */
 	public void removeVacations(MeetingIntervalTree tree, List<MeetingInterval> vacations) {
 		for (MeetingInterval vacation : vacations) {
-			System.out.print("Vacation is: "); vacation.display();
 			List<MeetingInterval> overlaps = tree.removeAllOverlaps(vacation);
 			// for every overlap, split on vacation and insert back into tree
-			if(!overlaps.isEmpty()) System.out.println("Overlaps:");
 			for (MeetingInterval overlap : overlaps) {
-				overlap.display();
 				List<MeetingInterval> newMeetings = overlap.split(vacation);
-				if(!newMeetings.isEmpty()) {
-					for (MeetingInterval newMeeting : newMeetings) {
-						tree.printTree();
-						System.out.print("New Meeting: "); newMeeting.display();
-					}
-				}
 				tree.insertList(newMeetings);
 			}
 		}
 	}
 	
 	/**
+	 * This isn't actually needed for this problem.. it's just really easy to implement in 
+	 *   case it's needed in the future
 	 * 
-	 * @param date
-	 * @return
+	 * O(logN)
+	 * 
+	 * Example of extensibility
+	 * 
+	 * @param tree = the interval tree
+	 * @param date = the date to see if there is a meeting on that day
+	 * @return whether or no there is a meeting on that day
 	 */
 	public boolean haveMeeting(MeetingIntervalTree tree, LocalDate date) {
 		MeetingInterval day = new MeetingInterval(date, date, date.getDayOfWeek());

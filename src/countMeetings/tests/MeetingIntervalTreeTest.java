@@ -20,24 +20,6 @@ class MeetingIntervalTreeTest {
 		tree.printTree();
 	}
 	
-	@Test
-	void testRemove() {
-		MeetingIntervalTree tree = new MeetingIntervalTree();
-		tree.insertList(getTestMeetings3());
-		
-		List<MeetingInterval> vacations = new ArrayList<MeetingInterval>();
-		MeetingInterval []intervals = {
-	        new MeetingInterval("2018-02-02", "2018-02-07", "Friday"),
-			new MeetingInterval("2018-02-16", "2018-02-20", "Wednesday"),
-			new MeetingInterval("2018-02-10", "2018-02-12", "Tuesday"),
-		};
-		for(MeetingInterval vacation : intervals) {
-			vacations.add(vacation);
-		}
-		tree.removeList(vacations);
-		tree.printTree();
-	}
-	
 	List<MeetingInterval> getTestMeetings1() {
 		List<MeetingInterval> meetings = new ArrayList<MeetingInterval>();
 		MeetingInterval []meetingIntervals = {
@@ -77,11 +59,11 @@ class MeetingIntervalTreeTest {
 	List<MeetingInterval> getTestMeetings3() {
 		List<MeetingInterval> meetings = new ArrayList<MeetingInterval>();
 		MeetingInterval []meetingIntervals = {
-                new MeetingInterval("2018-02-13", "2018-02-14", "Monday"),
-                new MeetingInterval("2018-02-10", "2018-02-12", "Tuesday"),
+//                new MeetingInterval("2018-02-13", "2018-02-14", "Monday"),
+//                new MeetingInterval("2018-02-10", "2018-02-12", "Tuesday"),
                 new MeetingInterval("2018-02-16", "2018-02-20", "Wednesday"),
-                new MeetingInterval("2018-02-10", "2018-02-16", "Thursday"),
-                new MeetingInterval("2018-02-02", "2018-02-07", "Friday"),
+//                new MeetingInterval("2018-02-10", "2018-02-16", "Thursday"),
+//                new MeetingInterval("2018-02-02", "2018-02-07", "Friday"),
 		};
 		for(MeetingInterval m : meetingIntervals) {
 			meetings.add(m);

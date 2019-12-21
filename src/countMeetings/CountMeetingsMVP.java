@@ -12,7 +12,8 @@ import countMeetings.helpers.MeetingInterval;
  *   (2) There are no holidays or vacations
  *   
  * This class simply aggregates all of the rows in the CSV
- * It should be used when...
+ * It should be used when you don't have holidays and you don't
+ *   need to worry about overlapping meetings.
  * 
  * @author Alex Lay
  */

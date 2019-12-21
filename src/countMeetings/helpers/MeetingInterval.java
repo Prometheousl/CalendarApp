@@ -7,7 +7,6 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Object class to represent intervals of dates
@@ -63,6 +62,7 @@ public class MeetingInterval {
 	 */
 	public int getMeetingCount() {
 		LocalDate newBeginDate = getFirstDayOfTheWeek();
+		if(newBeginDate.compareTo(endDate) > 0) return 0;
 		// number of days between beginDate (inclusive) and endDate (exclusive)
 		long numDaysBetween = ChronoUnit.DAYS.between(newBeginDate, endDate);
 		return Math.toIntExact((numDaysBetween / 7) + 1); // + 1 for first dayOfTheWeek
@@ -105,39 +105,13 @@ public class MeetingInterval {
 	}
 	
 	/**
-	 * Two cases:
-	 *   (1) Meeting is the same weekday and in the same interval of time
-	 *   (2) Vacation is in the same interval of time
+	 * Checks if two meetingIntervals are equal
 	 * 
-	 * https://www.sitepoint.com/implement-javas-equals-method-correctly/
+	 * If both objects have a dayOfTheWeek, checks that they're equal too
+	 * 
+	 * @param m = the interval to check if equal to this
+	 * @return if the two intervals are equal or not
 	 */
-	@Override
-	public boolean equals(Object o) {
-		// self check
-	    if (this == o)
-	        return true;
-	    // null check
-	    if (o == null)
-	        return false;
-	    // type check and cast
-	    if (getClass() != o.getClass())
-	        return false;
-	    MeetingInterval meetingInterval = (MeetingInterval) o;
-	    // field comparison
-	    if(!isDayOfTheWeek(dayOfTheWeek)) { // Vacation
-	    	if(meetingInterval.overlaps(this)) {
-	    		return true;
-	    	}
-	    }
-	    else if(meetingInterval.dayOfTheWeek == dayOfTheWeek){ // Meeting
-	    	if(meetingInterval.overlaps(this)) {
-	    		return true;
-	    	}
-	    }
-	    return false;
-	}
-	
-
 	public boolean equals(MeetingInterval m) {
 		// self check
 	    if (this == m)
@@ -149,11 +123,23 @@ public class MeetingInterval {
 	    if (getClass() != m.getClass())
 	        return false;
 	    // field comparison
-	    if(m.beginDate.equals(beginDate) && m.endDate.equals(endDate) && m.dayOfTheWeek == dayOfTheWeek)
-	    	return true;
+	    if(m.beginDate.equals(beginDate) && m.endDate.equals(endDate)) {
+	    	if(isDayOfTheWeek(m.dayOfTheWeek) && isDayOfTheWeek(dayOfTheWeek)) {
+	    		if(m.dayOfTheWeek == dayOfTheWeek)
+	    			return true;
+	    	}
+	    	else
+	    		return true;
+	    }
 	    return false;
 	}
 	
+	/**
+	 * Checks if the two intervals overlap or not
+	 * 
+	 * @param m = the interval to check if it overlaps with this
+	 * @return if m overlaps with this or not
+	 */
 	public boolean overlaps(MeetingInterval m) {
 		if(isDayOfTheWeek(m.dayOfTheWeek) && isDayOfTheWeek(dayOfTheWeek)) {
 			// comparing two meetings
@@ -166,6 +152,15 @@ public class MeetingInterval {
 		return false;
 	}
 	
+	/**
+	 * Merges two intervals together...
+	 * 
+	 * For example merging [2018-01-02, 2018-01-10] and [2018-01-01, 2018-01-09]
+	 *   results in [2018-01-01, 2018-01-10]
+	 * 
+	 * @param m = the interval to be merged
+	 * @return the merged interval
+	 */
 	public MeetingInterval merge(MeetingInterval m) {
 		LocalDate newBeginDate = getMinDate(beginDate, m.beginDate);
 		LocalDate newEndDate = getMaxDate(endDate, m.endDate);
@@ -173,6 +168,18 @@ public class MeetingInterval {
 		return new MeetingInterval(newBeginDate, newEndDate, dayOfTheWeek);
 	}
 	
+	/**
+	 * Splits a meeting interval on vacation
+	 * 
+	 * 4 cases:
+	 *   (1) overlaps all of it
+	 *   (2) overlaps beginning of interval
+	 *   (3) overlaps end of interval
+	 *   (4) splits interval in half
+	 * 
+	 * @param vacation = the interval to split this object on
+	 * @return a list of the resulting split interval (size 0,1, or 2)
+	 */
 	public List<MeetingInterval> split(MeetingInterval vacation) {
 		List<MeetingInterval> meetings = new ArrayList<MeetingInterval>();
 		// need to exclude the vacation beginning and end when instantiating new meetingIntervals

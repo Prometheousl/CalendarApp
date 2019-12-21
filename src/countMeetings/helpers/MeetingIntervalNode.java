@@ -5,6 +5,17 @@ import java.util.HashMap;
 import java.util.Map;
 import java.time.DayOfWeek;
 
+/**
+ * Represents a node in the interval tree (augmented Red-Black tree)
+ * 
+ * Like a normal Red-black tree node except...
+ * We need to keep track of the max date in each node for the interval
+ *   findOverlap algorithm. Additionally, we need to keep track of the max
+ *   date for each weekday so the search algorithm can find all overlapping
+ *   intervals for each weekday.
+ * 
+ * @author Alex Lay
+ */
 public class MeetingIntervalNode {
 	// for the interest of saving time I just made these public
 	// ideally would be private and have get and set methods
@@ -26,6 +37,13 @@ public class MeetingIntervalNode {
 		color = 'R';
 	}
 	
+	/**
+	 * Recursively recalculates the max value based on itself, its left child, and its right child
+	 * Also recalculates the dayMaxes
+	 * 
+	 * You can imagine this recalculating the variables up the tree 
+	 *   after a rotation, insert, or delete
+	 */
 	public void recalculateMax() {
 		DayOfWeek currentDay = this.value.dayOfTheWeek;
 		// recalc regular max
@@ -39,7 +57,11 @@ public class MeetingIntervalNode {
 		}
 	}
 	
-	
+	/**
+	 * Updates the regular max
+	 * The regular max is used when we don't care about days of the week
+	 *   (i.e. vacations or holidays)
+	 */
 	public void updateMax() {
 		LocalDate maxRight = null, maxLeft = null, maxLeftRight = null;
 		if(this.right != null) {
@@ -63,6 +85,15 @@ public class MeetingIntervalNode {
 			this.max = this.value.endDate;
 	}
 	
+	/**
+	 * Updates the dayMaxes
+	 * 
+	 * This map is used when we care about the days of the week
+	 * It allows MeetingIntervalTree.findOverlap to find all of the intervals
+	 *   that overlap with the given date and have the same day of the week
+	 * 
+	 * @return a map of the new dayMaxes
+	 */
 	public Map<DayOfWeek, LocalDate> updateDayMax() {
 		Map<DayOfWeek, LocalDate> newDayMax = new HashMap<DayOfWeek, LocalDate>();
 
@@ -77,115 +108,64 @@ public class MeetingIntervalNode {
 		else if(!newDayMax.containsKey(this.value.dayOfTheWeek))
 			newDayMax.put(this.value.dayOfTheWeek, this.value.endDate);
 		return newDayMax;
-//		// fix based on right child
-//		if(this.right != null) {
-//			DayOfWeek rightDayOfWeek = this.right.value.dayOfTheWeek;
-//			
-//			if(!this.dayMax.containsKey(rightDayOfWeek) ||
-//				 this.dayMax.get(rightDayOfWeek).compareTo(this.right.dayMax.get(rightDayOfWeek)) < 0) {
-//				this.dayMax.put(rightDayOfWeek, this.right.dayMax.get(rightDayOfWeek));
-//			}
-//		}
-//		// fix based on left child
-//		if(this.left != null) {
-//			DayOfWeek leftDayOfWeek = this.left.value.dayOfTheWeek;
-//			
-//			if(!this.dayMax.containsKey(leftDayOfWeek) ||
-//				 this.dayMax.get(leftDayOfWeek).compareTo(this.left.dayMax.get(leftDayOfWeek)) < 0) {
-//				this.dayMax.put(leftDayOfWeek, this.left.dayMax.get(leftDayOfWeek));
-//			}
-//		}
-//		if(this.dayMax.get(this.value.dayOfTheWeek).compareTo(this.max) < 0)
-//			this.dayMax.put(this.value.dayOfTheWeek, this.max);
 	}
 	
-	public boolean isLinear() {
-		if(this.isLeftChild() && !parent.isLeftChild())
-			return false;
-		if(this.isRightChild() && !parent.isRightChild())
-			return false;
-		return true;
+	// ************** get and set functions **********************
+	
+	public MeetingInterval getValue() {
+		return this.value;
 	}
 	
-	public char color() {
-		if(this.value == null) return 'B';
-		else return this.color;
+	public void setValue(MeetingInterval m) {
+		this.value = m;
 	}
 	
-	public void swap(MeetingIntervalNode other) {
-		MeetingInterval temp = this.value;
-		this.value = other.value;
-		other.value = temp;
+	public Map<DayOfWeek, LocalDate> getDayMax() {
+		return this.dayMax;
 	}
 	
-	// family relationships
-	// RBT helper functions
-	public MeetingIntervalNode parent() {
+	public void setDayMax(Map<DayOfWeek, LocalDate> d) {
+		this.dayMax = d;
+	}
+	
+	public LocalDate getMax() {
+		return this.max;
+	}
+	
+	public void setMax(LocalDate d) {
+		max = d;
+	}
+	
+	public MeetingIntervalNode getParent() {
 		return this.parent;
 	}
 	
-	public MeetingIntervalNode grandparent() {
-		return this.parent.parent;
+	public void setParent(MeetingIntervalNode n) {
+		this.parent = n;
 	}
 	
-	// could just access but this makes it more consistent
-	public MeetingIntervalNode leftChild() {
+	public MeetingIntervalNode getLeft() {
 		return this.left;
 	}
 	
-	public MeetingIntervalNode rightChild() {
+	public void setLeft(MeetingIntervalNode n) {
+		this.left = n;
+	}
+	
+	public MeetingIntervalNode getRight() {
 		return this.right;
 	}
 	
-	public MeetingIntervalNode uncle() {
-		if(parent == null) return null;
-		if(parent.isLeftChild())
-			return grandparent().rightChild();
-		else
-			return grandparent().leftChild();
+	public void setRight(MeetingIntervalNode n) {
+		this.right = n;
 	}
 	
-	public MeetingIntervalNode sibling() {
-		if(this.isLeftChild())
-			return parent.rightChild();
-		else
-			return parent.leftChild();
+	public char getColor() {
+		return this.color;
 	}
 	
-	// furthest child of sibling
-	public MeetingIntervalNode nephew() {
-		if(this.sibling() == null) return null;
-		else if(this.isRightChild())
-			return sibling().leftChild();
-		else
-			return sibling().rightChild();
-	}
-	
-	// closest child of sibling
-	public MeetingIntervalNode niece() {
-		if(this.sibling() == null) return null;
-		else if(this.isRightChild())
-			return sibling().rightChild();
-		else
-			return sibling().leftChild();
-	}
-	
-	public boolean isLeftChild() {
-		if(this.parent == null) 
-			return false;
-		else if(this.equals(this.parent.left))
-			return true;
-		else
-			return false;
-	}
-	
-	public boolean isRightChild() {
-		if(this.parent == null) 
-			return false;
-		else if(this.equals(this.parent.right))
-			return true;
-		else
-			return false;
+	public void setColor(char c) {
+		this.color = c;
 	}
 	
 	@Override

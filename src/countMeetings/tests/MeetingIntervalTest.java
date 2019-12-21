@@ -43,24 +43,6 @@ class MeetingIntervalTest {
 		LocalDate newBeginDate = LocalDate.parse("2019-12-04");
 		assertEquals(meetingInterval.getFirstDayOfTheWeek(), newBeginDate);
 	}
-	
-	@Test
-	void equalsTest() {
-		MeetingInterval m1 = new MeetingInterval("2018-02-02", "2018-02-05");
-		MeetingInterval m2 = new MeetingInterval("2018-02-02", "2018-02-05");
-		// exactly equal
-		assertTrue(m1.equals(m2));
-		// should overlap
-		m2 = new MeetingInterval("2018-02-02", "2018-02-07");
-		assertTrue(m1.equals(m2));
-		// should be false (doesn't overlap)
-		m2 = new MeetingInterval("2018-03-02", "2018-03-05");
-		assertTrue(!m1.equals(m2));
-		
-		m1 = new MeetingInterval("2018-02-13", "2018-02-15", "Wednesday");
-		m2 = new MeetingInterval("2018-02-10", "2018-02-17", "Wednesday");
-		assertTrue(m1.equals(m2));
-	}
 
 	/**
 	 * Test method for {@link countMeetings.helpers.MeetingInterval#mapDayOfWeek(java.lang.String)}.

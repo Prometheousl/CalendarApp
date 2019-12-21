@@ -13,6 +13,13 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
+ * Reads the data from a csv and returns it.
+ * Two implemenations for MVP (1) and Full (2):
+ *   (1) reads meetings in the format beginDate, endDate, dayOfTheWeek
+ *         and returns a list of that
+ *   (2) reads meetings in the format beginDate, endDate, dayOfTheWeek
+ *         and reads vacations in the format beginDate, endDate, ["Vacation" | "Holiday]
+ *         and returns both lists
  * 
  * Resources used: https://stackabuse.com/reading-and-writing-csvs-in-java/
  * 
@@ -82,7 +89,7 @@ public class CSVReader {
 			    if(data.length != 3) {
 			    	throw new IOException("Invalid input file format.");
 			    }
-			    if(data[2].toLowerCase() == "holiday" || data[2].toLowerCase() == "vacation") {
+			    if(data[2].toLowerCase().equals("holiday") || data[2].toLowerCase().equals("vacation")) {
 			    	vacations.add(new MeetingInterval(sanitizeDate(data[0]), sanitizeDate(data[1])));
 			    }
 			    else {

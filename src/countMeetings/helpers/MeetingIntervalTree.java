@@ -34,18 +34,14 @@ public class MeetingIntervalTree {
 	/**
 	 * Counts the total number of meetings
 	 * 
-	 * @param root is the root of the tree
-	 * @param total is the total number of meetings (should initially be 0)
+	 * @param root = is the root of the tree
 	 * @return the total number of meetings in the tree
 	 */
-	public Integer countMeetings(MeetingIntervalNode root, Integer total) {
-		if(root == null) return total;
+	public Integer countMeetings(MeetingIntervalNode root) {
+		if(root == null) return 0;
 		
-		// preorder traversal... doesn't really matter what order
-		total += root.value.getMeetingCount();
-		total += countMeetings(root.left, total);
-		total += countMeetings(root.right, total);
-		return total;
+		return root.value.getMeetingCount() + countMeetings(root.right) 
+											+ countMeetings(root.left);
 	}
 	
 	/**
@@ -54,7 +50,7 @@ public class MeetingIntervalTree {
 	 * If it does, it merges all overlapping intervals and puts it back
 	 * in the tree
 	 * 
-	 * @param m The interval to insert
+	 * @param m = The interval to insert
 	 */
 	public void insert(MeetingInterval m) {
 		if(root == null) {
@@ -74,18 +70,15 @@ public class MeetingIntervalTree {
 	 * (1) Removes all intervals that overlap with m
 	 * (2) Merges m and the overlapping intervals
 	 * 
-	 * @param m the interval to check if anything overlaps with it
+	 * @param m = the interval to check if anything overlaps with it
 	 * @return the new merged interval
 	 */
 	public MeetingInterval handleOverlaps(MeetingInterval m) {
 		// Merge all overlapping meetingIntervals
 		List<MeetingInterval> overlaps = removeAllOverlaps(m);
-		if(!overlaps.isEmpty()) System.out.println("Overlaps: ");
 		for (MeetingInterval overlap : overlaps) {
-			overlap.display();
 			m = m.merge(overlap);
 		}
-		if(!overlaps.isEmpty()) System.out.print("Merged interval: "); m.display();
 		
 		return m;
 	}
@@ -93,7 +86,7 @@ public class MeetingIntervalTree {
 	/**
 	 * inserts a list of meeting intervals
 	 * 
-	 * @param meetings the list to insert
+	 * @param meetings = the list to insert
 	 */
 	public void insertList(List<MeetingInterval> meetings) {
 		for(MeetingInterval m : meetings) {
@@ -105,8 +98,8 @@ public class MeetingIntervalTree {
 	 * Recursively inserts into the tree
 	 * Sorted by beginDate
 	 * 
-	 * @param current the current node
-	 * @param m the node to insert
+	 * @param current = the current node
+	 * @param m = the node to insert
 	 */
 	private void insertHelper(MeetingIntervalNode current, MeetingIntervalNode m) {
 		if(root == null) {
@@ -140,23 +133,23 @@ public class MeetingIntervalTree {
 	private void insertionFixUp(MeetingIntervalNode node) {
 		while(true) {
 			if(root.equals(node)) break;
-			if(node.parent != null && node.parent.color == 'B') break;
-			if(node.uncle() != null && node.uncle().color == 'R') {
-				node.parent.color = 'B';
-				node.uncle().color = 'B';
-				node.grandparent().color = 'R';
-				node = node.grandparent();
+			if(parent(node) != null && parent(node).color == 'B') break;
+			if(uncle(node) != null && uncle(node).color == 'R') {
+				parent(node).color = 'B';
+				uncle(node).color = 'B';
+				grandparent(node).color = 'R';
+				node = grandparent(node);
 			}
 			else { // uncle must be black
-				if(!node.isLinear()) {
+				if(!isLinear(node)) {
 					MeetingIntervalNode oldNode = node;
-					MeetingIntervalNode oldParent = node.parent();
+					MeetingIntervalNode oldParent = parent(node);
 					rotate(node);
 					node = oldParent;
 					node.parent = oldNode;
 				}
-				node.parent.color = 'B';
-				node.grandparent().color = 'R';
+				parent(node).color = 'B';
+				grandparent(node).color = 'R';
 				// rotate parent to grandparent
 				rotate(node.parent);
 				break;
@@ -168,30 +161,28 @@ public class MeetingIntervalTree {
 	/**
 	 * Removes all values that overlap with value and returns them in a list
 	 * 
-	 * @param value the value to check what overlaps with it
+	 * @param = value the value to check what overlaps with it
 	 * @return a list of intervals that overlap with value
 	 */
 	public List<MeetingInterval> removeAllOverlaps(MeetingInterval value) {
 		List<MeetingInterval> overlaps = new ArrayList<MeetingInterval>();
 		MeetingIntervalNode overlap = findOverlap(root, value);
-		System.out.println("*******Finding overlaps************");
 		while(overlap != null) {
 			if(overlap != null) {
 				overlaps.add(overlap.value);
 				remove(overlap);
 			}
-			printTree();
 			overlap = findOverlap(root, value);
 		}
-		System.out.println("********************************");
 		return overlaps;
 	}
 	
 	/**
+	 * Finds a node that overlaps with the given value
 	 * 
-	 * @param current
-	 * @param value
-	 * @return
+	 * @param current = the current node
+	 * @param value = the value to find what overlaps with it
+	 * @return a node that overlaps with value
 	 */
 	public MeetingIntervalNode findOverlap(MeetingIntervalNode current, MeetingInterval value) {
 		if(current == null) return null;
@@ -216,78 +207,40 @@ public class MeetingIntervalTree {
 		return findOverlap(current.right, value);
 	}
 	
+	/**
+	 * Removes a given node from the tree
+	 * 
+	 * @param node = the node to remove
+	 */
 	public void remove(MeetingIntervalNode node) {
 		root = removeHelper(root, node);
 		if(root != null) {
 			root.parent = null;
 			if(root.color == 'R') root.color = 'B';
-		}
-		System.out.println("###############REMOVED NODE######");
-		node.display();
-//		MeetingIntervalNode leaf = swapToLeaf(oldNode);
-//		pruneLeaf(leaf);
-		deletionFixUp(node);
-		// need to fix dayMaxes in case any ancestors contain info about the deleted node
-		if(node.parent != null) node.parent.recalculateMax();
-	}
-	
-	public void removeList(List<MeetingInterval> meetings) {
-		for(MeetingInterval meeting : meetings) {
-			remove(new MeetingIntervalNode(meeting, null));
+			deletionFixUp(node);
+			// need to fix dayMaxes in case any ancestors contain info about the deleted node
+			if(node.parent != null) node.parent.recalculateMax();
 		}
 	}
 	
-	public MeetingIntervalNode swapToLeaf(MeetingIntervalNode node) {
-		if(node == null) return null;
-		if(node.left == null && node.right == null) // It's a leaf!
-			return node;
-		else { // Recursively swap to leaf based on predecessor or successor
-			MeetingIntervalNode node_to_be_swapped = null;
-			if(node.left != null) 
-				node_to_be_swapped = findPredecessor(node);
-			else if(node.right != null && node_to_be_swapped == null)
-				node_to_be_swapped = findSuccessor(node);
-			node.swap(node_to_be_swapped);
-			node = node_to_be_swapped;
+	/**
+	 * Removes a list of intervals from the tree
+	 * 
+	 * @param meetings = the list of intervals to remove
+	 */
+	public void removeList(List<MeetingIntervalNode> meetings) {
+		for(MeetingIntervalNode meeting : meetings) {
+			remove(meeting);
 		}
-		return swapToLeaf(node);
 	}
 	
-	/** Returns the predecessor of the given node
-	*
-	*	@param node = a node
-	*/
-	private MeetingIntervalNode findPredecessor(MeetingIntervalNode node) {
-		if(node == null) return null;
-		else if(node.left != null)// return rightmost left child
-			return findLargestValue(node.left);
-		// else return the first right child of parent
-		MeetingIntervalNode y = node.parent;
-		MeetingIntervalNode x = node;
-		while(y != null && x == y.left) {
-			x = y;
-			y = y.parent;
-		}
-		return y;
-	}
-	/** Returns the successor of the given node
-	*
-	*	@param node = a node
-	*/
-	private MeetingIntervalNode findSuccessor(MeetingIntervalNode node) {
-		if(node == null) return null;
-		else if(node.right != null)
-			return findSmallestValue(node.right);
-		// else return the first left child of parent
-		MeetingIntervalNode y = node.parent;
-		MeetingIntervalNode x = node;
-		while(y != null && x == y.right) {
-			x = y;
-			y = y.parent;
-		}
-		return y;
-	}
-	
+	/**
+	 * Recursively removes the given node
+	 * 
+	 * @param current = the current node
+	 * @param node = the node to remove
+	 * @return the removed node
+	 */
 	public MeetingIntervalNode removeHelper(MeetingIntervalNode current, MeetingIntervalNode node) {
 		if(current == null)
 			return null;
@@ -325,119 +278,53 @@ public class MeetingIntervalTree {
 		return current;
 	}
 	
-	/** Deletes a leaf from the tree
-	*
-	*	@param t = a bst
-	*	@param leaf = The leaf node to be pruned
-	*/
-	private void pruneLeaf(MeetingIntervalNode leaf) {
-		if(leaf == root) {
-			//printf("Leaf is root\n");
-			root = null;
-		}
-		else if(leaf.parent.left == leaf) {
-			leaf.parent.left = null;
-			leaf.parent = null;
-		}
-		else if(leaf.parent.right == leaf) {
-			leaf.parent.right = null;
-		}
-	}
-	
+	/** Recursively fixes up the colors after a deletion into the tree
+	  *
+	  * @param node = The current node
+	  */
 	private void deletionFixUp(MeetingIntervalNode node) {
 		while(true) {
+			if(node == null) return;
 			if(root == node) break;
-			if(node.color == 'R') break;
-			if(node.sibling().color == 'R') {
-				node.parent.color = 'R';
-				node.sibling().color = 'B';
-				rotate(node.sibling());
+			if(node != null && node.color == 'R') break;
+			if(sibling(node) != null && sibling(node).color == 'R') {
+				parent(node).color = 'R';
+				sibling(node).color = 'B';
+				rotate(sibling(node));
 				// should have black sibling now
 			}
-			else if(node.nephew().color == 'R') {
-				node.sibling().color = node.parent.color;
-				node.parent.color = 'B';
-				node.nephew().color = 'B';
-				rotate(node.sibling());
+			else if(nephew(node) != null && nephew(node).color == 'R') {
+				sibling(node).color = node.parent.color;
+				parent(node).color = 'B';
+				nephew(node).color = 'B';
+				rotate(sibling(node));
 				// subtree and tree is BH balanced
 				break;
 			}
-			else if(node.niece().color == 'R') {
+			else if(niece(node) != null && niece(node).color == 'R') {
 				// nephew is black
-				node.niece().color = 'B';
-				node.sibling().color = 'R';
-				rotate(node.niece());
+				niece(node).color = 'B';
+				sibling(node).color = 'R';
+				rotate(niece(node));
 				// should have red nephew now
 			}
 			else { // sibling,niece, and nephew are black
-				if(node.sibling() != null)
-					node.sibling().color = 'R';
-				node = node.parent();
+				if(sibling(node) != null)
+					sibling(node).color = 'R';
+				node = parent(node);
 				// Subtree is BH balanced but tree is not
 			}
 		}
 		node.color = 'B';
 	}
 	
-	private void rotate(MeetingIntervalNode node) {
-		if(node.isLeftChild() && !node.parent.isLeftChild())
-			rightRotate(node.parent);
-		else if(node.isRightChild() && !node.parent.isRightChild())
-			leftRotate(node.parent());
-		else if(node.leftChild() != null && node.leftChild().isLinear())
-			rightRotate(node.parent());
-		else if(node.rightChild() != null && node.rightChild().isLinear())
-			leftRotate(node.parent());
-	}
-	
-	private void leftRotate(MeetingIntervalNode x) {
-		MeetingIntervalNode y = x.rightChild();
-		x.right = y.leftChild(); // y's left subtree = x's right subtree
-		if(y.leftChild() != null)
-			y.leftChild().parent = x;
-		y.parent = x.parent;
-		if(x.parent() == null)
-			root = y;
-		else {
-			if(x.parent.leftChild() == x)
-				x.parent.left = y;
-			else
-				x.parent.right = y;
-		}
-		y.left = x;
-		x.parent = y;
-		
-		x.recalculateMax();
-		y.recalculateMax();
-	}
-	
-	private void rightRotate(MeetingIntervalNode x) {
-		MeetingIntervalNode y = x.leftChild();
-		x.left = y.rightChild(); // y's left subtree = x's right subtree
-		if(y.rightChild() != null)
-			y.rightChild().parent = x;
-		y.parent = x.parent;
-		if(x.parent() == null)
-			root = y;
-		else {
-			if(x.parent.rightChild() == x)
-				x.parent.right = y;
-			else
-				x.parent.left = y;
-		}
-		y.right = x;
-		x.parent = y;
-		
-		x.recalculateMax();
-		y.recalculateMax();
-	}
-	
+	/**
+	 * finds successor
+	 * 
+	 * @param root = the current node
+	 */
 	private MeetingIntervalNode findSmallestValue(MeetingIntervalNode root) {
 		return root.left == null ? root : findSmallestValue(root.left);
-	}
-	
-	private MeetingIntervalNode findLargestValue(MeetingIntervalNode root) {
-		return root.right == null ? root : findLargestValue(root.right);
 	}
 	
 	
@@ -464,4 +351,164 @@ public class MeetingIntervalTree {
 		preorder(root.left);
 		preorder(root.right);
 	}
+	
+	// ************* Red-Black tree helper functions ****************
+	/**
+	 * Rotates node to its parent
+	 * Determines if it should be a right or left rotation
+	 * 
+	 * @param node = the node to rotate
+	 */
+	private void rotate(MeetingIntervalNode node) {
+		if(isLeftChild(node) && !isLeftChild(parent(node)))
+			rightRotate(node.parent);
+		else if(isRightChild(node) && !isRightChild(parent(node)))
+			leftRotate(parent(node));
+		else if(leftChild(node) != null && isLinear(leftChild(node)))
+			rightRotate(parent(node));
+		else if(rightChild(node) != null && isLinear(rightChild(node)))
+			leftRotate(parent(node));
+	}
+	
+	/**
+	 * left rotation
+	 * 
+	 * @param node = the node to rotate
+	 */
+	private void leftRotate(MeetingIntervalNode x) {
+		MeetingIntervalNode y = rightChild(x);
+		x.right = leftChild(y); // y's left subtree = x's right subtree
+		if(leftChild(y) != null)
+			leftChild(y).parent = x;
+		y.parent = x.parent;
+		if(parent(x) == null)
+			root = y;
+		else {
+			if(leftChild(parent(x)) == x)
+				x.parent.left = y;
+			else
+				x.parent.right = y;
+		}
+		y.left = x;
+		x.parent = y;
+		
+		x.recalculateMax();
+		y.recalculateMax();
+	}
+	
+	/**
+	 * right rotation
+	 * 
+	 * @param node = the node to rotate
+	 */
+	private void rightRotate(MeetingIntervalNode x) {
+		MeetingIntervalNode y = leftChild(x);
+		x.left = rightChild(y); // y's left subtree = x's right subtree
+		if(rightChild(y) != null)
+			rightChild(y).parent = x;
+		y.parent = x.parent;
+		if(parent(x) == null)
+			root = y;
+		else {
+			if(rightChild(parent(x)) == x)
+				x.parent.right = y;
+			else
+				x.parent.left = y;
+		}
+		y.right = x;
+		x.parent = y;
+		
+		x.recalculateMax();
+		y.recalculateMax();
+	}
+	
+		public boolean isLinear(MeetingIntervalNode node) {
+			if(isLeftChild(node) && !isLeftChild(parent(node)))
+				return false;
+			if(isRightChild(node) && !isRightChild(parent(node)))
+				return false;
+			return true;
+		}
+		
+		public char getColor(MeetingIntervalNode node) {
+			if(node == null) return 'B';
+			else return node.color;
+		}
+		
+		// family relationships
+		// RBT helper functions
+		public MeetingIntervalNode parent(MeetingIntervalNode node) {
+			if(node == null) return null;
+			return node.parent;
+		}
+		
+		public MeetingIntervalNode grandparent(MeetingIntervalNode node) {
+			if(parent(node) == null) return null;
+			return parent(parent(node));
+		}
+		
+		// could just access but this makes it more consistent
+		public MeetingIntervalNode leftChild(MeetingIntervalNode node) {
+			if(node == null) return null;
+			return node.left;
+		}
+		
+		public MeetingIntervalNode rightChild(MeetingIntervalNode node) {
+			if(node == null) return null;
+			return node.right;
+		}
+		
+		public MeetingIntervalNode uncle(MeetingIntervalNode node) {
+			if(parent(node) == null ||grandparent(node) == null) return null;
+			if(isLeftChild(parent(node)))
+				return rightChild(grandparent(node));
+			else
+				return leftChild(grandparent(node));
+		}
+		
+		public MeetingIntervalNode sibling(MeetingIntervalNode node) {
+			if(parent(node) == null) return null;
+			if(isLeftChild(node))
+				return rightChild(parent(node));
+			else
+				return leftChild(parent(node));
+		}
+		
+		// furthest child of sibling
+		public MeetingIntervalNode nephew(MeetingIntervalNode node) {
+			if(sibling(node) == null) return null;
+			else if(isRightChild(node))
+				return leftChild(sibling(node));
+			else
+				return rightChild(sibling(node));
+		}
+		
+		// closest child of sibling
+		public MeetingIntervalNode niece(MeetingIntervalNode node) {
+			if(sibling(node) == null) return null;
+			else if(isRightChild(node))
+				return rightChild(sibling(node));
+			else
+				return leftChild(sibling(node));
+		}
+		
+		public boolean isLeftChild(MeetingIntervalNode node) {
+			if(parent(node) == null) 
+				return false;
+			else if(node.equals(leftChild(parent(node))))
+				return true;
+			else
+				return false;
+		}
+		
+		public boolean isRightChild(MeetingIntervalNode node) {
+			if(parent(node) == null) 
+				return false;
+			else if(node.equals(rightChild(parent(node))))
+				return true;
+			else
+				return false;
+		}
+		
+		// *********************************************
 }
