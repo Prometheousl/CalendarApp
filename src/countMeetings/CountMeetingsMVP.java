@@ -21,6 +21,8 @@ public class CountMeetingsMVP implements CountMeetings {
 	/**
 	 * Counts the total number of meetings in the given csv meetings file
 	 * 
+	 * O(N)
+	 *
 	 * @param meetingsPath is the path to the csv meetings file
 	 * @return the total number of meetings
 	 */
