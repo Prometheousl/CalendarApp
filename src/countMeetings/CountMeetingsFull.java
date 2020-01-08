@@ -37,7 +37,7 @@ public class CountMeetingsFull implements CountMeetings {
 	/**
 	 * Counts all of the meetings in the tree
 	 * 
-	 * O(logN)
+	 * preorder; O(N)
 	 * 
 	 * @param tree = the interval tree
 	 * @return the total number of meetings in the tree
@@ -49,7 +49,7 @@ public class CountMeetingsFull implements CountMeetings {
 	/**
 	 * Inserts all of the given meetings into the tree
 	 * 
-	 * O(logN)
+	 * O(NlogN)
 	 * 
 	 * @param tree = an interval tree
 	 * @param meetings = the meetings to insert
@@ -67,7 +67,11 @@ public class CountMeetingsFull implements CountMeetings {
 	 * 				(3) Splits overlap based on vacation
 	 * 				(4) Inserts split intervals back into the tree
 	 * 
-	 * O(logN)
+	 * O(V*M*logN) where V = number of vacations, M = number of overlaps, logN = height of tree
+	 *   (1) O(MlogN) to remove all overlaps
+	 *   (2) O(MlogN) to split and insert overlaps
+	 *   (3) O(V*(MlogN + MlogN)) to remove vacations
+	 *   (4) O(V*M*logN) simplified
 	 * 
 	 * @param tree
 	 * @param vacations
